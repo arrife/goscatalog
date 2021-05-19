@@ -2,5 +2,5 @@
 
 Сайт для надстройки над Госкатологом для более удобного поиска.
 
-Сайт Госкаталога: [goscatalog.ru](goscatalog.ru)
+Сайт Госкаталога: [goscatalog.ru](https://goskatalog.ru/portal/#/)
  

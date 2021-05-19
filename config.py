@@ -10,7 +10,7 @@ class Config(object):
         'password':'uSy5Nkf4Wnr4ptYekPsa37QCGMhZrwCv',
         'database':'govcatalog'
     }
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'my first app'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         "mariadb+pymysql://{user}:{password}@{host}:{port}/{database}".format(**CONNECTION)
     SQLALCHEMY_TRACK_MODIFICATIONS = False

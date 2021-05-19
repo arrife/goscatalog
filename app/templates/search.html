@@ -1,0 +1,116 @@
+<!doctype html>
+
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+	<link rel="icon" href="static/images/museum.ico">
+	<title>Госкаталог</title>
+	<link rel="stylesheet" href='static/styles/styles.css' type="text/css">
+<!-- 	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Oswald:400,300" type="text/css"> -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link href="//code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"></link>
+	<script src="//code.jquery.com/jquery-2.2.0.min.js"></script>
+	<script src="//code.jquery.com/ui/1.10.2/jquery-ui.js" ></script>
+
+	<script type="text/javascript">
+	var fields = ["query", "name", "author", "museum", "typology", "technology", "pplace", "fplace"]
+	$(function() {
+		$.each(fields, function(index, value) {
+			$("#autocomplete_" + value).autocomplete({
+				source:function(request, response) {
+					$.getJSON("{{url_for('autocomplete')}}",{
+						query: request.term,
+						field: value,
+						// optional: args,
+						// search: window.location.search, // in flask, "q" will be the argument to look for using request.args
+					}, function(data) {
+						response(data.matching_results); // matching_results from jsonify
+					});
+				},
+				minLength: 0,
+				select: function(event, ui) {
+					console.log(ui.item.value); // not in your question, but might help later
+				}
+			})
+		});
+	})
+	$(function(){
+	    $("form").submit(function(){
+	        $("input").each(function(index, obj){
+	            if($(obj).val() == "") {
+	                $(obj).remove();
+	            }
+	        });
+	    });
+	});
+	</script>
+
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+<body>
+	<div id="wrapper">
+		<header>
+			<form name="search" method="get">
+				<input type="text" name="query" id='autocomplete_query' placeholder='Search' value="{{ args.query }}">
+				<button type="submit"><i class="fa fa-search"></i></button>
+			</form>
+		</header>
+		<div id="heading"></div>
+		<aside>
+		<nav>
+			<!-- <ul class="aside-menu"> -->
+				<form class="aside-menu" name="search" method="get">
+					<input type="hidden" name="query" value={{ args.query }}>
+					<p><input type="text" name="name" id='autocomplete_name' placeholder="Название" value="{{ args.name }}"></p>
+					<p><input type="text" name="author" id='autocomplete_author' placeholder="Автор" value="{{ args.author }}"></p>
+					<p><input type="text" name="museum" id='autocomplete_museum' placeholder="Музей" value="{{ args.museum }}"></p>
+					<p><input type="text" name="typology" id='autocomplete_typology' placeholder="Типология" value="{{ args.typology }}"></p>
+					<p><input type="text" name="technology" id='autocomplete_technology' placeholder="Технологии" value="{{ args.technology }}"></p>
+					<p><input type="text" name="pplace" id='autocomplete_pplace' placeholder="Место создания" value="{{ args.pplace }}"></p>
+					<p><input type="text" name="fplace" id='autocomplete_fplace' placeholder="Место находки" value="{{ args.fplace }}"></p>
+					<!-- <p><input type="text" name="epoch" id='autocomplete_epoch' placeholder="Эпоха" value="{{ args.epoch }}"></p> -->
+					<p><button type="submit">Применить фильтры</button></p>
+				</form>
+			<!-- </ul> -->
+		</nav>
+		</aside>
+		<section>
+			{% if results %}
+			Всего результатов: {{ results.total }}
+			{% for object in results.items %}
+			<div class="results"> 
+				Авторы: 
+				{% for person in object.authors %} 
+					<a href="{{ url_for('search_page', page=page, author=person, **except_field(args, 'author')) }}">{{person}}</a>, 
+				{% endfor %}
+				<br> Музей: <a href="{{ url_for('search_page', page=page, museum=object.museum.name, **except_field(args, 'museum')) }}">{{ object.museum.name }}</a>
+				<br> Типология: <a href="{{ url_for('search_page', page=page, typology=object.typology.name, **except_field(args, 'typology')) }}">{{ object.typology.name }}</a> 
+				<br>
+				Технологии и материалы:
+				{% for tech in object.technologies %} 
+					<a href="{{ url_for('search_page', page=page, technology=update_techs(args, tech.__str__()), **except_field(args, 'technology')) }}">{{tech}}</a>,  
+				{% endfor %}
+				<br>
+				Место создания: {{ object.production_place }}
+				<br>
+				Место находки: {{ object.find_place }}
+				<br>				
+				Название: <a href="https://goskatalog.ru/portal/#/collections?id={{ object.inner_id }}" target=_blank>{{ object.name }}</a>
+				<figure>
+					<img src={{ object.image }} width="96" height="96" alt="">
+					<!-- <figcaption>{{ object.name }}</figcaption> -->
+					<!-- url: {{ object.image }} -->
+				</figure>
+			</div>
+			{% endfor %}
+			{% if results.has_prev %}<a href="{{ url_for('search_page', page=results.prev_num, **args) }}"><< previous</a>{% endif %} | 
+			{% if results.has_next %}<a href="{{ url_for('search_page', page=results.next_num, **args) }}">next >></a>{% endif %}
+			{% endif %}
+		</section>
+	</div>
+	<footer></footer>
+</body>
+</html>
